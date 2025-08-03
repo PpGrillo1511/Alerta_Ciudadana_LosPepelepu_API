@@ -15,6 +15,6 @@ class Usuario(base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nombre = Column(String(100), nullable=False)
     correo_electronico = Column(String(100), unique=True, nullable=False)
-    contrasena = Column(String(255), nullable=False)  # Aquí va el hash
+    contrasena = Column(String(255), nullable=False)
     rol = Column(Enum(RolUsuario), nullable=False)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
