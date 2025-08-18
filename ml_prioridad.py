@@ -1,25 +1,41 @@
-# ml_prioridad_descripcion.py
+# backend/ml_prioridad.py
+import re
+import mysql.connector
+from sklearn.feature_extraction.text import TfidfVectorizer
+import pandas as pd
 
-from typing import Dict
+# Conexión a la BD
+def obtener_incidentes():
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Robertin06",
+        database="bd_alertaciudadana"
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, descripcion, fecha_reporte FROM incidentes")
+    data = cursor.fetchall()
+    conn.close()
+    return pd.DataFrame(data, columns=["id", "descripcion", "fecha_reporte"])
 
-# Diccionario de palabras clave por nivel de prioridad
-PALABRAS_CLAVE = {
-    2: ["humo", "incendio", "explosion", "herido", "accidente grave"],
-    1: ["robo", "hurto", "accidente leve", "sospechoso"],
-    0: ["molestia", "ruido", "consulta", "informacion"]
+# Palabras clave por prioridad
+palabras_prioridad = {
+    "alta": ["humo", "incendio", "arma", "robo", "accidente", "caer"],
+    "media": ["ruido", "contaminación", "basura", "luz"],
+    "baja": ["vecinos", "madrugada", "música"]
 }
 
-def predecir_prioridad(incidente: Dict) -> int:
-    """
-    Recibe un diccionario con 'descripcion' y 'fecha'.
-    Devuelve prioridad (0=baja, 1=media, 2=alta)
-    """
-    descripcion = incidente['descripcion'].lower()
+def asignar_prioridad(texto):
+    texto = texto.lower()
+    for palabra in palabras_prioridad["alta"]:
+        if palabra in texto:
+            return "alta"
+    for palabra in palabras_prioridad["media"]:
+        if palabra in texto:
+            return "media"
+    return "baja"
 
-    for prioridad, palabras in PALABRAS_CLAVE.items():
-        for palabra in palabras:
-            if palabra in descripcion:
-                return prioridad
-    
-    # Si no coincide ninguna palabra clave, prioridad por defecto
-    return 0
+def procesar_incidentes():
+    df = obtener_incidentes()
+    df["prioridad"] = df["descripcion"].apply(asignar_prioridad)
+    return df

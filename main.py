@@ -10,7 +10,7 @@ from src.routes.incidente import incidente as incidente_router
 from src.routes.categoria import categoria as categoria_router
 from src.config.db import base, engine
 from src.models import usuario, comentario, incidente, categoria
-from ml_prioridad import predecir_prioridad
+from ml_prioridad import procesar_incidentes
 
 base.metadata.create_all(bind=engine)
 
@@ -19,14 +19,10 @@ app = FastAPI(
     description="API para el reporte y gestión de incidentes urbanos",
 )
 
-class Incidente(BaseModel):
-    descripcion: str
-    fecha: str  # solo para registro, no influye en la prioridad
-
-@app.post("/prioridad")
-def obtener_prioridad(incidente: Incidente):
-    prioridad = predecir_prioridad(incidente.dict())
-    return {"prioridad": prioridad}  # solo en memoria
+@app.get("/incidentes_prioridad")
+def get_incidentes_prioridad():
+    df = procesar_incidentes()
+    return df.to_dict(orient="records")
 
 @app.post("/generar-datos/")
 def generar_datos(
