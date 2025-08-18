@@ -1,15 +1,13 @@
-# backend/ml_prioridad.py
 import re
 import mysql.connector
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pandas as pd
 
-# Conexión a la BD
 def obtener_incidentes():
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="",
+        password="Robertin06",
         database="bd_alertaciudadana"
     )
     cursor = conn.cursor()
@@ -18,7 +16,6 @@ def obtener_incidentes():
     conn.close()
     return pd.DataFrame(data, columns=["id", "descripcion", "fecha_reporte"])
 
-# Palabras clave por prioridad
 palabras_prioridad = {
     "alta": ["humo", "incendio", "arma", "robo", "accidente", "caer"],
     "media": ["ruido", "contaminación", "basura", "luz"],
