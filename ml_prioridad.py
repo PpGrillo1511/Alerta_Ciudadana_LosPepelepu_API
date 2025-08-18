@@ -9,7 +9,7 @@ def obtener_incidentes():
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Robertin06",
+        password="",
         database="bd_alertaciudadana"
     )
     cursor = conn.cursor()
