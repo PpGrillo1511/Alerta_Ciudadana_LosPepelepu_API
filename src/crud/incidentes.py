@@ -8,7 +8,7 @@ def get_incidente(db: Session, incidente_id: int):
     """Obtiene un incidente por su ID."""
     return db.query(Incidente).filter(Incidente.id == incidente_id).first()
 
-def get_incidentes(db: Session, skip: int = 0, limit: int = 10):
+def get_incidentes(db: Session, skip: int = 0, limit: int = 100):
     """Obtiene una lista paginada de incidentes."""
     return db.query(Incidente).offset(skip).limit(limit).all()
 

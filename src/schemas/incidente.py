@@ -30,6 +30,7 @@ class IncidenteUpdate(IncidenteBase):
 class Incidente(IncidenteBase):
     id: int
     fecha_reporte: datetime
+    prioridad: str
 
     class Config:
         orm_mode = True

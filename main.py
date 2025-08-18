@@ -2,14 +2,15 @@
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from src.seeder.seeder import ejecutar_sp_generar_datos
 from src.routes.usuario import usuario as usuario_router
 from src.routes.comentario import comentario as comentario_router
 from src.routes.incidente import incidente as incidente_router
 from src.routes.categoria import categoria as categoria_router
-from src.routes.ml import router as ml_router
 from src.config.db import base, engine
 from src.models import usuario, comentario, incidente, categoria
+from ml_prioridad import predecir_prioridad
 
 base.metadata.create_all(bind=engine)
 
@@ -17,6 +18,15 @@ app = FastAPI(
     title="Alerta Ciudadana",
     description="API para el reporte y gestión de incidentes urbanos",
 )
+
+class Incidente(BaseModel):
+    descripcion: str
+    fecha: str  # solo para registro, no influye en la prioridad
+
+@app.post("/prioridad")
+def obtener_prioridad(incidente: Incidente):
+    prioridad = predecir_prioridad(incidente.dict())
+    return {"prioridad": prioridad}  # solo en memoria
 
 @app.post("/generar-datos/")
 def generar_datos(
@@ -42,7 +52,6 @@ app.include_router(usuario_router)
 app.include_router(incidente_router)
 app.include_router(comentario_router)
 app.include_router(categoria_router)
-app.include_router(ml_router)
 
 if __name__ == "__main__":
     import uvicorn
