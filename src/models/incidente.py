@@ -22,6 +22,7 @@ class Incidente(base):
     latitud = Column(Float, nullable=False)
     longitud = Column(Float, nullable=False)
     estado = Column(Enum(EstadoIncidente), default=EstadoIncidente.pendiente)
+    prioridad = Column(String(50), nullable=True, default="Sin prioridad")
     fecha_reporte = Column(DateTime, default=datetime.utcnow)
 
     # Relaciones
