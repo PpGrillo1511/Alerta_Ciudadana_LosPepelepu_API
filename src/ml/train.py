@@ -1,16 +1,29 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 import pickle
+import os
 
-def train_model(incidentes):
-    textos = [i["descripcion"] for i in incidentes]
-    etiquetas = [i["categoria"] for i in incidentes]
+MODEL_DIR = "src/ml/modelos"
+MODEL_FILE = os.path.join(MODEL_DIR, "modelo_categoria.pkl")
+VECTORIZER_FILE = os.path.join(MODEL_DIR, "vectorizer.pkl")
 
+def entrenar_modelo(descripciones, categorias):
+    """Entrena el modelo y guarda vectorizer y modelo en archivos."""
+    # Crear carpeta si no existe
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
+    # Vectorizar descripciones
     vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(textos)
+    X_vect = vectorizer.fit_transform(descripciones)
 
-    model = LogisticRegression()
-    model.fit(X, etiquetas)
+    # Entrenar modelo
+    model = LogisticRegression(max_iter=1000)
+    model.fit(X_vect, categorias)
 
-    with open("src/ml/model.pkl", "wb") as f:
-        pickle.dump((vectorizer, model), f)
+    # Guardar modelo y vectorizer
+    with open(MODEL_FILE, "wb") as f:
+        pickle.dump(model, f)
+    with open(VECTORIZER_FILE, "wb") as f:
+        pickle.dump(vectorizer, f)
+
+    return {"mensaje": "Modelo entrenado y guardado exitosamente"}

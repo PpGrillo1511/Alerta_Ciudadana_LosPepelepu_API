@@ -1,39 +1,49 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from src.config.db import get_db
-from src.ml.train import train_model
-from src.ml.predict import predict_categoria
+from src.config.db import SesionLocal
 from src.models.incidente import Incidente
-from src.schemas.ml import PredictRequest
+from src.ml.train import entrenar_modelo
+import pickle
+from fastapi import Query
 
-router = APIRouter()
+router = APIRouter(prefix="/ml", tags=["ML"])
 
-@router.post("/ml/train")
-def entrenar_modelo(db: Session = Depends(get_db)):
-    incidentes = db.query(Incidente).filter(Incidente.categoria.isnot(None)).all()
-    data = [{"descripcion": i.descripcion, "categoria": i.categoria} for i in incidentes]
-
-    if not data:
-        return {"error": "No hay datos con categoría para entrenar el modelo"}
-
-    train_model(data)
-    return {"mensaje": "✔ Modelo entrenado con éxito", "total": len(data)}
-
-@router.post("/ml/predict")
-def predecir_categoria(request: PredictRequest):
+# Dependencia para obtener DB
+def get_db():
+    db = SesionLocal()
     try:
-        categoria, confianza = predict_categoria(request.descripcion)
-        return {"categoria": categoria, "confianza": confianza}
-    except:
-        return {"error": "Modelo no entrenado. Ejecuta primero /ml/train"}
+        yield db
+    finally:
+        db.close()
 
-@router.post("/ml/retrain")
-def reentrenar_modelo(db: Session = Depends(get_db)):
-    incidentes = db.query(Incidente).filter(Incidente.categoria.isnot(None)).all()
-    data = [{"descripcion": i.descripcion, "categoria": i.categoria} for i in incidentes]
+@router.post("/train")
+def train_model(db: Session = Depends(get_db)):
+    # Obtener incidentes con categoria_id
+    incidentes = db.query(Incidente)\
+        .filter(Incidente.categoria_id != None)\
+        .filter(Incidente.categoria_id != 0)\
+        .all()
 
-    if not data:
-        return {"error": "No hay datos suficientes para reentrenar"}
+    if not incidentes:
+        return {"error": "No hay incidentes con categoria_id para entrenar"}
 
-    train_model(data)
-    return {"mensaje": "✔ Modelo reentrenado con éxito", "total": len(data)}
+    descripciones = [inc.descripcion for inc in incidentes]
+    categorias = [inc.categoria_id for inc in incidentes]
+
+    # Entrenar modelo
+    resultado = entrenar_modelo(descripciones, categorias)
+    return resultado
+
+@router.post("/predict")
+def predecir_categoria(descripcion: str = Query(...)):
+    # Cargar modelo y vectorizer
+    with open("src/ml/modelos/modelo_categoria.pkl", "rb") as f:
+        model = pickle.load(f)
+    with open("src/ml/modelos/vectorizer.pkl", "rb") as f:
+        vectorizer = pickle.load(f)
+
+    # Transformar descripción y predecir
+    X = vectorizer.transform([descripcion])
+    pred = model.predict(X)
+
+    return {"categoria_id_predicha": int(pred[0])}
