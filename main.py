@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from src.seeder.seeder import ejecutar_sp_generar_datos
 from src.routes.usuario import usuario as usuario_router
 from src.routes.comentario import comentario as comentario_router
@@ -9,6 +10,8 @@ from src.routes.incidente import incidente as incidente_router
 from src.routes.categoria import categoria as categoria_router
 from src.config.db import base, engine
 from src.models import usuario, comentario, incidente, categoria
+from ml_prioridad import procesar_incidentes
+from ml_nl_prioridad import router as zonas_router
 
 base.metadata.create_all(bind=engine)
 
@@ -16,6 +19,11 @@ app = FastAPI(
     title="Alerta Ciudadana",
     description="API para el reporte y gestión de incidentes urbanos",
 )
+
+@app.get("/incidentes_prioridad")
+def get_incidentes_prioridad():
+    df = procesar_incidentes()
+    return df.to_dict(orient="records")
 
 @app.post("/generar-datos/")
 def generar_datos(
@@ -41,6 +49,7 @@ app.include_router(usuario_router)
 app.include_router(incidente_router)
 app.include_router(comentario_router)
 app.include_router(categoria_router)
+app.include_router(zonas_router, prefix="/ml", tags=["Zonas Críticas"])
 
 if __name__ == "__main__":
     import uvicorn
