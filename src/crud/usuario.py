@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 from src.models.usuario import Usuario
-from src.schemas.usuario import UsuarioCreate, UsuarioUpdate
+from src.schemas.usuario import UsuarioRegister, UsuarioUpdate
 from passlib.hash import bcrypt
 
 def get_usuario(db: Session, usuario_id: int):
@@ -13,19 +13,22 @@ def get_usuario_by_correo(db: Session, correo_electronico: str):
     """Obtiene un usuario por su correo."""
     return db.query(Usuario).filter(Usuario.correo_electronico == correo_electronico).first()
 
-def create_usuario(db: Session, usuario: UsuarioCreate):
-    """Crea un nuevo usuario en la base de datos."""
+def create_usuario_register(db: Session, usuario: UsuarioRegister):
+    """Crea un usuario nuevo sin generar token."""
     hashed_password = bcrypt.hash(usuario.contrasena)
     db_usuario = Usuario(
         nombre=usuario.nombre,
+        apellidos=usuario.apellidos,
         correo_electronico=usuario.correo_electronico,
+        telefono=usuario.telefono,
         contrasena=hashed_password,
-        rol=usuario.rol
+        rol="ciudadano"
     )
     db.add(db_usuario)
     db.commit()
     db.refresh(db_usuario)
     return db_usuario
+
 
 def update_usuario(db: Session, usuario_id: int, usuario: UsuarioUpdate):
     """Actualiza los datos de un usuario existente."""
