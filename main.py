@@ -4,6 +4,9 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from src.seeder.seeder import ejecutar_sp_generar_datos
+from src.seeder.seeder_usuarios import ejecutar_sp_crear_usuarios_aleatorios
+from src.seeder.seeder_comentarios import ejecutar_sp_insertar_comentarios_aleatorios
+from src.seeder.seeder_incidentes import ejecutar_sp_insertar_incidentes_aleatorios
 from src.routes.usuario import usuario as usuario_router
 from src.routes.comentario import comentario as comentario_router
 from src.routes.incidente import incidente as incidente_router
@@ -32,6 +35,26 @@ def generar_datos(
     comentarios: int = Query(30, description="Cantidad de comentarios a generar")
 ):
     return ejecutar_sp_generar_datos(usuarios, incidentes, comentarios)
+
+@app.post("/generar-usuarios/")
+def generar_datos_usuarios(
+    usuarios: int = Query(10, description="Cantidad de usuarios a generar")
+):
+    return ejecutar_sp_crear_usuarios_aleatorios(usuarios)
+
+
+@app.post("/generar-incidentes/")
+def generar_datos_incidentes(
+    incidentes: int = Query(10, description="Cantidad de incidentes a generar")
+):
+    return ejecutar_sp_insertar_incidentes_aleatorios(incidentes)
+
+
+@app.post("/generar-comentarios/")
+def generar_datos_comentarios(
+    comentarios: int = Query(10, description="Cantidad de usuarios a generar")
+):
+    return ejecutar_sp_insertar_comentarios_aleatorios(comentarios)
 
 app.add_middleware(
     CORSMiddleware,
