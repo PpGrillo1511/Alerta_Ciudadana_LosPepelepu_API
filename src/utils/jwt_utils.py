@@ -16,7 +16,7 @@ def solicita_token(usuario_data: dict) -> str:
     
     payload = {
         "sub": usuario_data["id"],
-        "Nombre_Usuario": usuario_data["Nombre_Usuario"],
+        "nombre": usuario_data["nombre"],
         "rol": usuario_data["rol"],
         "exp": expiracion
     }
